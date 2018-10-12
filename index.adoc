@@ -9,6 +9,9 @@ part 1 - for newbies
 part 2 - for people who already know something
 --
 
+
+// part 1
+
 == `Introduction to Types`
 
 
@@ -16,15 +19,15 @@ part 2 - for people who already know something
 
 [NOTE.speaker]
 --
-As audience before moving on.
+Ask audience before moving on.
 --
 
 
 === Intuitively
 
-A collection of values
+[fragment]#A collection of values#
 
-(add image of some int and string sets)
+[fragment]#(TODO add image of some int and string sets)#
 
 [NOTE.speaker]
 --
@@ -63,7 +66,7 @@ can be judged as some type.
 
 === Subtype & Supertype
 
-(image with member and admin as subtypes of user)
+(TODO image with member and admin as subtypes of user)
 
 
 === Subtype & Supertype
@@ -103,7 +106,7 @@ class Admin extends User
 
 === Some Type Hierarchy
 
-(image of type hierarchy from post)
+(TODO image of type hierarchy from post)
 
 
 === Example
@@ -119,17 +122,17 @@ val x = if (i >= 0) Some(i) // Some[Int]
 
 === Types of `Some(i)`
 
-(image)
+(TODO add image)
 
 
 === Types of `None`
 
-(image)
+(TODO add image)
 
 
 === Common part
 
-(image)
+(TODO add image)
 
 
 === Least Upper Bound
@@ -138,6 +141,7 @@ val x = if (i >= 0) Some(i) // Some[Int]
 a : T is provable to be true
 
 > *Type Inference* - finding the LUB of a value
+
 
 
 === Example
@@ -153,10 +157,16 @@ val x = if (i >= 0) Some(i) // Some[Int]
 
 == ADT
 
-ADT is either a *product* or a **coproduct** type. :)
 
-But what are products and coproduct types?
+[fragment]#ADT is either a *product* or **coproduct** type. :)#
 
+[fragment]#But what are product and coproduct types?#
+
+[NOTE.speaker]
+--
+Explain that now we will talk about:
+tuples -> cartesian products -> sum types
+--
 
 === Tuple
 
@@ -222,7 +232,6 @@ import shapeless._
 String :: Int :: Double :: HNil
 ----
 
-
 [NOTE.speaker]
 --
 Mention shapeless `HList` and the concept of cons.
@@ -231,29 +240,241 @@ Mention shapeless `HList` and the concept of cons.
 
 === Disjoint union
 
-[NOTE.speaker]
---
-Mention concept of tags.
---
-
-
-=== Compound vs Intersection Types
-
+[stem]
+++++
+X = Y|Z \iff (x : X \implies x : Y \veebar x : Z)
+++++
 
 [NOTE.speaker]
 --
-Either[Int, Int] as an example of difference.
+Mention concept of tags. And that this is XOR!
+--
+
+
+=== Disjoint union
+
+[source, scala]
+----
+sealed trait Credentials
+
+final case class LoginPassword(
+    login: String,
+    password: String
+) extends Credentials
+
+final case class AccessToken(
+    token: String
+) extends Credentials
+----
+
+[NOTE.speaker]
+--
+Sealed is very important!
+Other examples: Either, Option, Enumeratum.
+--
+
+
+=== Union types
+
+[stem]
+++++
+X = Y|Z \iff (x : X \implies x : Y \lor x : Z)
+++++
+
+[NOTE.speaker]
+--
+In dotty. Left == Right will result in one type.
+--
+
+
+=== Union types
+
+[source, scala]
+----
+type My = String | Int
+----
+
+[NOTE.speaker]
+--
+Either[Int, Int] and Int | Int as an example of difference.
+--
+
+
+=== Compound types
+
+[%step]
+In set theory we have set intersection.
+
+[%step]
+What do we have in Scala type system?
+
+
+=== Compound types
+
+[source, scala]
+----
+trait Str { def str: String }
+trait Count { def count: Int }
+
+def repeat(cd: Str with Count): String =
+  Iterator.fill(cd.count)(cd.str).mkString
+
+repeat(new Str with Count {
+  val str = "test"
+  val count = 3
+})
+----
+
+
+=== Compound types
+
+[stem]
+++++
+x \in A \cap B \\
+\Updownarrow \\
+x \in A \land x \in B
+\iff
+x \in B \land x \in A \\
+\Updownarrow \\
+x \in B \cap A
+++++
+
+
+=== Compound types
+
+[source, scala]
+----
+val sc: Str with Count
+val ca: Count with Str
+def repeat(sc) // works as expected
+def repeat(ca) // also works!
+----
+
+[NOTE.speaker]
+--
+This is true only about signature.
+Not about the behavior!
+--
+
+
+=== Compound types
+
+[source, scala]
+----
+trait A { def value = 10 }
+trait B extends A { override def value = super.value * 2 }
+trait C extends A { override def value = super.value + 2 }
+(new B with C {}).value // ???
+(new C with B {}).value // ???
+----
+
+[NOTE.speaker]
+--
+Diamond problem. Trait linearization.
+--
+
+
+=== Compound types
+
+[source, scala]
+----
+trait X extends A with B with C
+----
+
+is the same as
+
+[source, scala]
+----
+trait AnonymousB extends A {
+  // B overrides A
+  override def value = super.value * 2
+}
+trait AnonymousC extends AnonymousB {
+  // C overrides AnonymousB
+  override def value = super.value + 2
+}
+trait X extends AnonymousC
+----
+
+[NOTE.speaker]
+--
+It helps if you put everything after extends in a parenthesis.
+--
+
+
+=== Intersection types
+
+[stem]
+++++
+X = Y&Z \iff (x : X \implies x : Y \land x : Z)
+++++
+
+[NOTE.speaker]
+--
+In dotty. Left == Right will result in one type.
+--
+
+
+=== Intersection types
+
+[source, scala]
+----
+type My = String & Int
+----
+
+[NOTE.speaker]
+--
+It should be commutative (in behavior)
+as opposed to compound types.
 --
 
 
 == Classes
 
-TODO
+Mathematically:
+
+> A *class* is such group of objects for which some predicate
+(an **indicator function**) returns true.
+
+Programming:
+
+> A recipe for *objects* + contracts. *Instances* of that class can be a type.
+
+[NOTE.speaker]
+--
+Examples of contracts: has method, has field.
+
+In some OOP language all classes are types, but not all types are classes, e.g. primitives, void.
+
+In statically-typed languages that recipe dictates memory layout of the object.
+
+In dynamically-typed languages class is a factor object,
+that creates other objects.
+
+In prototype-based languages it object might redirect calls
+to a prototype. So we reason whether object or its prototype
+follows some contracts. More or less.
+--
 
 
 == Unit
 
-TODO
+[source, scala]
+----
+(): Unit
+----
+
+[NOTE.speaker]
+--
+Origin: it is convinient (in some theories obligatory) that
+each funtion takes arguments and returns values.
+
+So 0-argument functions or functions returning no value is
+a no-go. Cathegory theory uses void as an argument for nullary
+and unit for procedures (fun without returned values).
+
+It is NOT a 0-tuple, which IMHO is a mistake.
+--
 
 
 == Type Constructors
@@ -265,6 +486,8 @@ TODO
 
 TODO
 
+
+// part 2
 
 == `All you need to know about types in Scala`
 
