@@ -1,4 +1,4 @@
-= From Types to Kind Projectors
+= From Type to Kind Projector
 
 [NOTE.speaker]
 --
