@@ -1,16 +1,333 @@
-= Title Slide
-
-== Slide One
-
-* Foo
-* Bar
-* World
-
-== Slide Two
-
-Hello World - Good Bye Cruel World
+= From Types to Kind Projectors
 
 [NOTE.speaker]
 --
-Actually things aren't that bad
+Mention that whole presentaiton consitsts of 2 parts.
+
+part 1 - for newbies
+
+part 2 - for people who already know something
 --
+
+== `Introduction to Types`
+
+
+== What is a Type?
+
+[NOTE.speaker]
+--
+As audience before moving on.
+--
+
+
+=== Intuitively
+
+A collection of values
+
+(add image of some int and string sets)
+
+[NOTE.speaker]
+--
+Type is kinda like set except sets are in different thery.
+--
+
+
+=== Example
+
+[source, scala]
+--
+// type annotation
+
+val i: Int    = 0   // value i = 0 is of type Int
+val s: String = "a" // value s = "a" is of type String
+
+def double(x: Int): Int = x * 2
+
+// type ascription
+
+
+0 : Int // compiles because it is true
+"": Int // fails to compile
+--
+
+[NOTE.speaker]
+--
+TT: `a: A` is judgement - it means that a is of type A
+
+Type annotation - stating type explicitly.
+
+Type ascription - demanding of compiler to make sure value
+can be judged as some type.
+--
+
+
+=== Subtype & Supertype
+
+(image with member and admin as subtypes of user)
+
+
+=== Subtype & Supertype
+
+[stem]
+++++
+(Member <: User) \\
+\Updownarrow \\
+\forall_a (a : Member \implies a : User)
+++++
+
+
+=== Subtype & Supertype
+
+[source, scala]
+----
+trait User
+class Member extends User
+class Admin extends User
+----
+
+=== Subtype & Supertype
+
+(image with admin as a subtype of user)
+
+
+=== Subtype & Supertype
+
+[source, scala]
+----
+class User
+class Admin extends User
+----
+
+== Least Upper Bound and Type Inference
+
+
+=== Some Type Hierarchy
+
+(image of type hierarchy from post)
+
+
+=== Example
+
+[source, scala]
+----
+val i: Int
+val x = if (i >= 0) Some(i) // Some[Int]
+        else None           // None
+// what is the type of x?
+----
+
+
+=== Types of `Some(i)`
+
+(image)
+
+
+=== Types of `None`
+
+(image)
+
+
+=== Common part
+
+(image)
+
+
+=== Least Upper Bound
+
+> *Least Upper Bound* of a - the least type T for which judgement
+a : T is provable to be true
+
+> *Type Inference* - finding the LUB of a value
+
+
+=== Example
+
+[source, scala]
+----
+val i: Int
+val x = if (i >= 0) Some(i) // Some[Int]
+        else None           // None
+// x: Option[Int]
+----
+
+
+== ADT
+
+ADT is either a *product* or a **coproduct** type. :)
+
+But what are products and coproduct types?
+
+
+=== Tuple
+
+> A *tuple* or an **ordered pair**, is a collection of two elements,
+where we select one of them as the first.
+
+In set theory we can define them as:
+
+[stem]
+++++
+(a, b) = \{\{a\}, \{a,b\}\}
+++++
+
+
+=== Cartesian Product of 2
+
+[stem]
+++++
+A \times B = \{ (a, b): a \in A \land b \in B \}
+++++
+
+
+=== n-tuple
+
+[stem]
+++++
+(a, b, c) = (a, (b, c)) \\
+(a, b, c, d) = (a, (b, (c, d))) \\
+...
+++++
+
+[NOTE.speaker]
+--
+In programming languages we make n-tuples right associative.
+
+In mathematics they are left associative.
+--
+
+
+=== Cartesian Product of n
+
+Generalization of Cartesian product:
+
+[stem]
+++++
+A \times B \times C = \{ (a, b, c): a \in A \land b \in B \land c \in C \} \\
+A \times B \times C = A \times (B \times C) \\
+A \times B \times C \times D = A \times (B \times (C \times D)) \\
+...
+++++
+
+
+=== Product types
+
+[source, scala]
+----
+type X = (String, Int, Double)
+type Y = Tuple3[String, Int, Double]
+case class Z(s: String, i: Int, d: Double)
+class Z2(val s: String, val i: Int, val d: Double)
+
+import shapeless._
+String :: Int :: Double :: HNil
+----
+
+
+[NOTE.speaker]
+--
+Mention shapeless `HList` and the concept of cons.
+--
+
+
+=== Disjoint union
+
+[NOTE.speaker]
+--
+Mention concept of tags.
+--
+
+
+=== Compound vs Intersection Types
+
+
+[NOTE.speaker]
+--
+Either[Int, Int] as an example of difference.
+--
+
+
+== Classes
+
+TODO
+
+
+== Unit
+
+TODO
+
+
+== Type Constructors
+
+TODO
+
+
+== Summary
+
+TODO
+
+
+== `All you need to know about types in Scala`
+
+TODO
+
+
+== What is a kind?
+
+A type of type :)
+
+[NOTE.speaker]
+--
+Here run snippets in
+
+pushd /tmp && sbt console || popd
+
+:kind String
+
+:kind List
+
+:kind Either
+
+import scala.language.higherKinds
+
+trait NeedTC[F[_]]
+
+:kind NeedTC
+--
+
+
+== Type constraints
+
+TODO
+
+
+== Variance
+
+TODO
+
+
+== Existential types
+
+TODO
+
+
+== Structural types
+
+TODO
+
+also reinfed
+
+
+== Path-dependent types
+
+TODO
+
+
+== Kind-projectors
+
+TODO
+
+
+== Summary
+
+TODO
+
