@@ -5,7 +5,7 @@ module.exports = function(grunt) {
 
 	if (!Array.isArray(root)) root = [root];
 
-    grunt.loadNpmTasks('grunt-run');
+	grunt.loadNpmTasks('grunt-run');
 
 	// Project configuration
 	grunt.initConfig({
@@ -26,10 +26,6 @@ module.exports = function(grunt) {
 		        cmd: 'npm',
 		        args: ['run', 'prebuild']
 		    }
-		},
-
-		qunit: {
-			files: [ 'test/*.html' ]
 		},
 
 		uglify: {
@@ -170,7 +166,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks( 'grunt-contrib-connect' );
 	grunt.loadNpmTasks( 'grunt-contrib-cssmin' );
 	grunt.loadNpmTasks( 'grunt-contrib-jshint' );
-	grunt.loadNpmTasks( 'grunt-contrib-qunit' );
 	grunt.loadNpmTasks( 'grunt-contrib-uglify' );
 	grunt.loadNpmTasks( 'grunt-contrib-watch' );
 	grunt.loadNpmTasks( 'grunt-autoprefixer' );
@@ -182,7 +177,7 @@ module.exports = function(grunt) {
 	grunt.registerTask( 'default', [ 'css', 'js' ] );
 
 	// JS task
-	grunt.registerTask( 'js', [ 'jshint', 'uglify', 'qunit' ] );
+	grunt.registerTask( 'js', [ 'jshint', 'uglify' ] );
 
 	// Theme CSS
 	grunt.registerTask( 'css-themes', [ 'sass:themes' ] );
@@ -201,8 +196,5 @@ module.exports = function(grunt) {
 	
 	// Rebuild ASCIIDocs
 	grunt.registerTask( 'prebuild', [ 'run:prebuild' ]);
-
-	// Run tests
-	grunt.registerTask( 'test', [ 'jshint', 'qunit' ] );
 
 };
