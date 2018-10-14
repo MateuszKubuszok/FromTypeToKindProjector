@@ -988,7 +988,7 @@ int count(java.util.List<?>... seqs) {
 
 [NOTE.speaker]
 --
-Explain that existential types are not the same thing as typ constructors!
+Explain, that existential types are not the same thing as typ constructors!
 
 They just happen to share the same syntax.
 
@@ -999,9 +999,58 @@ Existential types are about fogetting type parameter of existing value and appea
 
 == Structural types
 
-TODO
+[source, javascript]
+----
+type User = { name: string, surname: string }
+----
 
-also reinfed
+=== Structural types
+
+[source, javascript]
+----
+type User = {
+  val name: String
+  val surname: String
+}
+----
+
+[source, scala]
+----
+case class Somebody(name: String, surname: String)
+
+def needUser(user: User): Unit
+
+needUser(Somebody("test", "test")) // works!
+----
+
+[NOTE.speaker]
+--
+Explain that accessing value of a structural type requires runtime reflection, so it is a performance penalty.
+--
+
+
+=== Refined types
+
+[source, scala]
+----
+trait X { val x: String }
+type Y = { val y: Int }
+val z: X with Y = new X { val x = "test"; val y = 0 }
+----
+
+[source, scala]
+----
+new X { val x = "test"; val y = 0 }
+// AnyRef with X{val y: Int}
+----
+
+[NOTE.speaker]
+--
+Refined type is the same thing as structural type, just in a specific context.
+
+Mention that Java 10 with var has them but in half baked way
+(no way fot you to describe the type).
+--
 
 
 == Path-dependent types

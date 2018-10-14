@@ -308,12 +308,27 @@ def count(seqs: (Seq[T] forSome { type T })*): Int</code></pre></div></div>
         .mapToInt(seq -&gt; seq.size())
         .sum();
 }</code></pre></div></div>
-<aside class="notes"><div class="paragraph"><p>Explain that existential types are not the same thing as typ constructors!</p></div>
+<aside class="notes"><div class="paragraph"><p>Explain, that existential types are not the same thing as typ constructors!</p></div>
 <div class="paragraph"><p>They just happen to share the same syntax.</p></div>
 <div class="paragraph"><p>Type constructors are about types that are not yet fully constructed and appear as type params.
 Existential types are about fogetting type parameter of existing value and appear in type ascription.</p></div></aside></section></section>
-<section id="structural_types"><h2>Structural types</h2><div class="paragraph"><p>TODO</p></div>
-<div class="paragraph"><p>also reinfed</p></div></section>
+<section><section id="structural_types"><h2>Structural types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="javascript language-javascript">type User = { name: string, surname: string }</code></pre></div></div></section><section id="structural_types_2"><h2>Structural types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="javascript language-javascript">type User = {
+  val name: String
+  val surname: String
+}</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">case class Somebody(name: String, surname: String)
+
+def needUser(user: User): Unit
+
+needUser(Somebody("test", "test")) // works!</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>Explain that accessing value of a structural type requires runtime reflection, so it is a performance penalty.</p></div></aside></section><section id="refined_types"><h2>Refined types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">trait X { val x: String }
+type Y = { val y: Int }
+val z: X with Y = new X { val x = "test"; val y = 0 }</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">new X { val x = "test"; val y = 0 }
+// AnyRef with X{val y: Int}</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>Refined type is the same thing as structural type, just in a specific context.</p></div>
+<div class="paragraph"><p>Mention that Java 10 with var has them but in half baked way
+(no way fot you to describe the type).</p></div></aside></section></section>
 <section id="path_dependent_types"><h2>Path-dependent types</h2><div class="paragraph"><p>TODO</p></div></section>
 <section id="kind_projectors"><h2>Kind-projectors</h2><div class="paragraph"><p>TODO</p></div></section>
 <section id="summary_2"><h2>Summary</h2><div class="paragraph"><p>TODO</p></div></section></div></div><script src="./lib/js/head.min.js"></script><script src="./js/reveal.js"></script><script>// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
