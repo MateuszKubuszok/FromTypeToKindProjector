@@ -1,5 +1,7 @@
 = From Type to Kind Projector
 
+Mateusz Kubuszok
+
 [NOTE.speaker]
 --
 Mention that whole presentaiton consitsts of 2 parts.
@@ -7,6 +9,13 @@ Mention that whole presentaiton consitsts of 2 parts.
 part 1 - for newbies
 
 part 2 - for people who already know something
+
+Skipped:
+
+* F-bound types
+* self-types
+* tagged and value types
+* phantom and literal types
 --
 
 
@@ -1055,15 +1064,232 @@ Mention that Java 10 with var has them but in half baked way
 
 == Path-dependent types
 
-TODO
+[source, scala]
+----
+case class Card(color: String, value: String)
+case class Player(name: String)
+class Game {
+  def getPlayers: Set[Players] = ???
+  def getCards: Set[Cards] = ???
+  def playerPlayCard(player: Player, card: Card): Unit = ???
+}
+----
+
+[source, scala]
+----
+val game1: Game
+val game2: Game
+game1.playerPlayCard(game2.getPlayers.head,
+                     game2.getCards.head) // oops!
+----
+
+=== Path-dependent types
+
+[source, scala]
+----
+class Game {
+  case class Card(color: String, value: String)
+  case class Player(name: String)
+ 
+  def getPlayers: Set[this.Player] = ???
+  def getCards: Set[this.Card] = ???
+  def playerPlayCard(player: this.Player,
+                     card: this.Card): Unit = ???
+}
+----
+
+[source, scala]
+----
+val game1 = new Game
+val game2 = new Game
+game1.getPlayers // Set[game1.Player]
+game2.getPlayers // Set[game2.Player]
+----
+
+[source, scala]
+----
+game1.playerPlayCard(game2.getPlayers.head,
+                     game2.getCards.head) // fails!
+----
+
+[NOTE.speaker]
+--
+In Java that would translate to internal class, but here
+we are also able to trace from which object it originated.
+
+Path-dependent types are used in e.g. Slick or in compiler macros.
+--
 
 
-== Kind-projectors
+=== Path-dependent types
 
-TODO
+[source, scala]
+----
+class X {
+  type Y = String
+  val y: Y = "y"
+}
+
+val x1 = new X
+val x2 = new X
+----
+
+[source, scala]
+----
+def y(x: X)(y: x.Y): Unit = ()
+
+y(x1)(x2.y) // no complaints: x1.Y = String = x2.Y
+----
+
+[NOTE.speaker]
+--
+If Scala can figure out the exact type, then path-dependant types might dissapear.
+--
+
+
+=== Path-dependent types
+
+[source, scala]
+----
+trait X {
+  type Y = String
+  val y: Y = "y"
+}
+
+class X2 extends X
+
+val x1 = new X2
+val x2 = new X2
+
+y(x1)(x2.y) // fails!
+----
+
+[NOTE.speaker]
+--
+We can always make type Y abstract, which is why Scala cannot assume
+things will be as they are. (More or less).
+--
+
+
+=== Path-dependent types
+
+[source, scala]
+----
+trait X {
+  type Y
+  val y: Y
+}
+
+val x1 = new X {
+  type Y = String
+  val y: Y = "y"
+}
+val x2 = new X {
+  type Y = Int
+  val y: Y = 1
+}
+----
+
+
+=== Getting rid of path-dependency
+
+[source, scala]
+----
+def takeAnyPlayer(p: Game#Player): Unit
+----
+
+
+== Kind projectors
+
+[source, scala]
+----
+type MonadThrowable[F[_]] = MonadError[F, Throwable]
+def handleError[F[_]: MonadThrowable, A](fa: F[A]): F[A
+----
+
+[NOTE.speaker]
+--
+To get rid of intermediate type:
+
+* put it into structural type
+* use path-dependent type to extract type with applied one parameter
+--
+
+
+=== Kind projectors
+
+[source, scala]
+----
+type MT { type T[F[_]] = MonadError[F, Throwable] }
+def handleError[F[_]: MT#T, A](fa: F[A]): F[A]
+----
+
+[NOTE.speaker]
+--
+To get rid of intermediate type:
+
+* replace type alias with its definition
+--
+
+
+=== Kind projectors
+
+[source, scala]
+----
+def handleError[
+  F[_] : ({ type T[F[_]] = MonadError[F, Throwable] })#T,
+  A
+](fa: F[A]): F[A]
+----
+
+[NOTE.speaker]
+--
+You have to use parethesis or it will break.
+
+Mention that lambda sign is often used to denote the kind projector.
+
+Mention it is also known as type-lambda.
+
+Mention, that usually kind projector compiler plugin is used.
+--
+
+
+=== Kind projectors
+
+[source, scala]
+----
+def handleError[F[_] : MonadError[?, Throwable], A](
+  fa: F[A]
+): F[A]
+----
+
+[source, scala]
+----
+[T] => Either[String, T]
+----
+
+[NOTE.speaker]
+--
+First - kind projecttor plugin.
+
+Second - Dotty.
+--
 
 
 == Summary
 
-TODO
+[%step]
+* we have a quite fine grained control over type parameters and their usage
+* Scala does it best to preserve the type information even if we don't need it (now)
+* you (and surely some library authors) will use path-dependent types
+to ensure that some values will be passed only in the right context
 
+== More info
+
+* my blog post (add link)
+* ktoso (add link)
+* official documentation (add link)
+
+== Questions?
+
+== Thanks!

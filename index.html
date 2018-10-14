@@ -13,9 +13,12 @@ TeX: { equationNumbers: { autoNumber: "none" } }
 link.rel = 'stylesheet';
 link.type = 'text/css';
 link.href = window.location.search.match( /print-pdf/gi ) ? "./css/print/pdf.css" : "./css/print/paper.css";
-document.getElementsByTagName( 'head' )[0].appendChild( link );</script><!--[if lt IE 9]><script src="./lib/js/html5shiv.js"></script><![endif]--></head><body><div class="reveal"><div class="slides"><section class="title" data-state="title"><h1>From Type to Kind Projector</h1><div class="preamble"><aside class="notes"><div class="paragraph"><p>Mention that whole presentaiton consitsts of 2 parts.</p></div>
+document.getElementsByTagName( 'head' )[0].appendChild( link );</script><!--[if lt IE 9]><script src="./lib/js/html5shiv.js"></script><![endif]--></head><body><div class="reveal"><div class="slides"><section class="title" data-state="title"><h1>From Type to Kind Projector</h1><div class="preamble"><div class="paragraph"><p>Mateusz Kubuszok</p></div>
+<aside class="notes"><div class="paragraph"><p>Mention that whole presentaiton consitsts of 2 parts.</p></div>
 <div class="paragraph"><p>part 1 - for newbies</p></div>
-<div class="paragraph"><p>part 2 - for people who already know something</p></div></aside></div></section>
+<div class="paragraph"><p>part 2 - for people who already know something</p></div>
+<div class="paragraph"><p>Skipped:</p></div>
+<div class="ulist"><ul><li><p>F-bound types</p></li><li><p>self-types</p></li><li><p>tagged and value types</p></li><li><p>phantom and literal types</p></li></ul></div></aside></div></section>
 <section id="code_introduction_to_types_code"><h2><code>Introduction to Types</code></h2></section>
 <section><section id="what_is_a_type"><h2>What is a Type?</h2><aside class="notes"><div class="paragraph"><p>Ask audience before moving on.</p></div></aside></section><section id="intuitively"><h2>Intuitively</h2><div class="paragraph"><p><span class="fragment">A collection of values</span></p></div>
 <div class="paragraph"><p><span class="fragment">(TODO add image of some int and string sets)</span></p></div>
@@ -329,9 +332,90 @@ val z: X with Y = new X { val x = "test"; val y = 0 }</code></pre></div></div>
 <aside class="notes"><div class="paragraph"><p>Refined type is the same thing as structural type, just in a specific context.</p></div>
 <div class="paragraph"><p>Mention that Java 10 with var has them but in half baked way
 (no way fot you to describe the type).</p></div></aside></section></section>
-<section id="path_dependent_types"><h2>Path-dependent types</h2><div class="paragraph"><p>TODO</p></div></section>
-<section id="kind_projectors"><h2>Kind-projectors</h2><div class="paragraph"><p>TODO</p></div></section>
-<section id="summary_2"><h2>Summary</h2><div class="paragraph"><p>TODO</p></div></section></div></div><script src="./lib/js/head.min.js"></script><script src="./js/reveal.js"></script><script>// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+<section><section id="path_dependent_types"><h2>Path-dependent types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">case class Card(color: String, value: String)
+case class Player(name: String)
+class Game {
+  def getPlayers: Set[Players] = ???
+  def getCards: Set[Cards] = ???
+  def playerPlayCard(player: Player, card: Card): Unit = ???
+}</code></pre></div></div><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val game1: Game
+val game2: Game
+game1.playerPlayCard(game2.getPlayers.head,
+                     game2.getCards.head) // oops!</code></pre></div></div></section><section id="path_dependent_types_2"><h2>Path-dependent types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">class Game {
+  case class Card(color: String, value: String)
+  case class Player(name: String)
+
+  def getPlayers: Set[this.Player] = ???
+  def getCards: Set[this.Card] = ???
+  def playerPlayCard(player: this.Player,
+                     card: this.Card): Unit = ???
+}</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val game1 = new Game
+val game2 = new Game
+game1.getPlayers // Set[game1.Player]
+game2.getPlayers // Set[game2.Player]</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">game1.playerPlayCard(game2.getPlayers.head,
+                     game2.getCards.head) // fails!</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>In Java that would translate to internal class, but here
+we are also able to trace from which object it originated.</p></div>
+<div class="paragraph"><p>Path-dependent types are used in e.g. Slick or in compiler macros.</p></div></aside></section><section id="path_dependent_types_3"><h2>Path-dependent types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">class X {
+  type Y = String
+  val y: Y = "y"
+}
+
+val x1 = new X
+val x2 = new X</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def y(x: X)(y: x.Y): Unit = ()
+
+y(x1)(x2.y) // no complaints: x1.Y = String = x2.Y</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>If Scala can figure out the exact type, then path-dependant types might dissapear.</p></div></aside></section><section id="path_dependent_types_4"><h2>Path-dependent types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">trait X {
+  type Y = String
+  val y: Y = "y"
+}
+
+class X2 extends X
+
+val x1 = new X2
+val x2 = new X2
+
+y(x1)(x2.y) // fails!</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>We can always make type Y abstract, which is why Scala cannot assume
+things will be as they are. (More or less).</p></div></aside></section><section id="path_dependent_types_5"><h2>Path-dependent types</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">trait X {
+  type Y
+  val y: Y
+}
+
+val x1 = new X {
+  type Y = String
+  val y: Y = "y"
+}
+val x2 = new X {
+  type Y = Int
+  val y: Y = 1
+}</code></pre></div></div></section><section id="getting_rid_of_path_dependency"><h2>Getting rid of path-dependency</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def takeAnyPlayer(p: Game#Player): Unit</code></pre></div></div></section></section>
+<section><section id="kind_projectors"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">type MonadThrowable[F[_]] = MonadError[F, Throwable]
+def handleError[F[_]: MonadThrowable, A](fa: F[A]): F[A</code></pre></div></div><aside class="notes"><div class="paragraph"><p>To get rid of intermediate type:</p></div>
+<div class="ulist"><ul><li><p>put it into structural type</p></li><li><p>use path-dependent type to extract type with applied one parameter</p></li></ul></div></aside></section><section id="kind_projectors_2"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">type MT { type T[F[_]] = MonadError[F, Throwable] }
+def handleError[F[_]: MT#T, A](fa: F[A]): F[A]</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>To get rid of intermediate type:</p></div>
+<div class="ulist"><ul><li><p>replace type alias with its definition</p></li></ul></div></aside></section><section id="kind_projectors_3"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def handleError[
+  F[_] : ({ type T[F[_]] = MonadError[F, Throwable] })#T,
+  A
+](fa: F[A]): F[A]</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>You have to use parethesis or it will break.</p></div>
+<div class="paragraph"><p>Mention that lambda sign is often used to denote the kind projector.</p></div>
+<div class="paragraph"><p>Mention it is also known as type-lambda.</p></div>
+<div class="paragraph"><p>Mention, that usually kind projector compiler plugin is used.</p></div></aside></section><section id="kind_projectors_4"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def handleError[F[_] : MonadError[?, Throwable], A](
+  fa: F[A]
+): F[A]</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">[T] =&gt; Either[String, T]</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>First - kind projecttor plugin.</p></div>
+<div class="paragraph"><p>Second - Dotty.</p></div></aside></section></section>
+<section id="summary_2"><h2>Summary</h2><div class="ulist"><ul><li class="fragment"><p>we have a quite fine grained control over type parameters and their usage</p></li><li class="fragment"><p>Scala does it best to preserve the type information even if we don&#8217;t need it (now)</p></li><li class="fragment"><p>you (and surely some library authors) will use path-dependent types
+to ensure that some values will be passed only in the right context</p></li></ul></div></section>
+<section id="more_info"><h2>More info</h2><div class="ulist"><ul><li><p>my blog post (add link)</p></li><li><p>ktoso (add link)</p></li><li><p>official documentation (add link)</p></li></ul></div></section>
+<section id="questions"><h2>Questions?</h2></section>
+<section id="thanks"><h2>Thanks!</h2></section></div></div><script src="./lib/js/head.min.js"></script><script src="./js/reveal.js"></script><script>// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
 Reveal.initialize({
   // Display controls in the bottom right corner
   controls: true,
