@@ -40,7 +40,8 @@ can be judged as some type.</p></div></aside></section><section id="subtype_supe
 class Member extends User
 class Admin extends User</code></pre></div></div></section><section id="subtype_supertype_4"><h2>Subtype &amp; Supertype</h2><div class="paragraph"><p>(image with admin as a subtype of user)</p></div></section><section id="subtype_supertype_5"><h2>Subtype &amp; Supertype</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">class User
 class Admin extends User</code></pre></div></div></section></section>
-<section><section id="least_upper_bound_and_type_inference"><h2>Least Upper Bound and Type Inference</h2></section><section id="some_type_hierarchy"><h2>Some Type Hierarchy</h2><div class="paragraph"><p>(TODO image of type hierarchy from post)</p></div></section><section id="example_2"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val i: Int
+<section><section id="least_upper_bound_and_type_inference"><h2>Least Upper Bound and Type Inference</h2></section><section id="some_type_hierarchy"><h2>Some Type Hierarchy</h2><div class="paragraph"><p>(TODO image of type hierarchy from post)</p></div>
+<aside class="notes"><div class="paragraph"><p>Explain Any, AnyVal, AnyRef, Nothing and Null.</p></div></aside></section><section id="example_2"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val i: Int
 val x = if (i &gt;= 0) Some(i) // Some[Int]
         else None           // None
 // what is the type of x?</code></pre></div></div></section><section id="types_of_code_some_i_code"><h2>Types of <code>Some(i)</code></h2><div class="paragraph"><p>(TODO add image)</p></div></section><section id="types_of_code_none_code"><h2>Types of <code>None</code></h2><div class="paragraph"><p>(TODO add image)</p></div></section><section id="common_part"><h2>Common part</h2><div class="paragraph"><p>(TODO add image)</p></div></section><section id="least_upper_bound"><h2>Least Upper Bound</h2><div class="quoteblock"><blockquote><div class="paragraph"><p><strong>Least Upper Bound</strong> of a - the least type T for which judgement
@@ -168,7 +169,50 @@ is in the second part of the presentation.</p></div></aside></section></section>
 <div class="paragraph"><p>import scala.language.higherKinds</p></div>
 <div class="paragraph"><p>trait NeedTC[F[_]]</p></div>
 <div class="paragraph"><p>:kind NeedTC</p></div></aside></section>
-<section id="type_constraints"><h2>Type constraints</h2><div class="paragraph"><p>TODO</p></div></section>
+<section><section id="type_constraints"><h2>Type constraints</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">sealed trait User { val id: Int }
+case class Member(id: Int, name: String) extends User
+case class Admin(id: Int, accss: Set[String]) extends User</code></pre></div></div><div class="paragraph"><p>Map[id, user] - approach 1</p></div><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def byId(users: Set[User]): Map[Int, User] =
+  users.map { u =&gt; u.id -&gt; u }.toMap</code></pre></div></div><div class="paragraph"><p>Map[id, user] - approach 2</p></div><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def byId[U](users: Set[U])(getId: U =&gt; Int): Map[Int, U] =
+  users.map { u =&gt; getId(u) -&gt; u }.toMap</code></pre></div></div></section><section id="upper_bound"><h2>Upper Bound</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">sealed trait User { val id: Int }
+case class Member(id: Int, name: String) extends User
+case class Admin(id: Int, accss: Set[String]) extends User</code></pre></div></div>
+<div class="paragraph"><p>Map[id, user] - approach 1</p></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def byId[U &lt;: User](users: Set[U]): Map[Int, U] =
+  users.map { u =&gt; u.id -&gt; u }.toMap</code></pre></div></div>
+<div class="paragraph"><p>Map[id, user] - approach 2</p></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">byId(users: Set[Member]) // Map[Int, Member]
+byId(users: Set[Admin]) // Map[Int, Admin]</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>&lt;: denotes an upper bound in type parameters. It look like this, so that parser would not confuse it with &lt;, but its meaning is similar - a type on the left is smaller (lies lower in hierarchy) than a type on the right</p></div></aside></section><section id="lower_bound"><h2>Lower Bound</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def recover[E, A, B &gt;: A](
+    either: Either[E, A])(f: E =&gt; B): Either[E, B] =
+  either match {
+    case Left(e)  =&gt; Right(f(e))
+    case Right(a) =&gt; Right(a)
+  }</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">recover[String, Admin, User](err: Either[String, Admin]) {
+    _ =&gt;
+  fallback: Member
+}
+// Either[String, User]</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>I need to pass types explicitly, otherwise type inference would put Nothing there.</p></div></aside></section><section id="generalized_type_constraints"><h2>Generalized type constraints</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def upcast[A, B](set: Set[A])(
+  implicit ev: A &lt;:&lt; B // A is a subclass of B
+): Set[B] = set.map(ev(_))
+
+upcast[Member, User](Set(m: Member)) // Set[User]</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def update[A, B](set: Set[A])(f: A =&gt; B)(
+  implicit ev: A =:= B // types are equal
+): Set[B] = set.map(f)
+
+val members: Set[Member]
+
+update[Member, Member](members)(identity) // ok
+update[Member, User](members) { member =&gt;
+  member: User
+} // compilation error!</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>&lt;:&lt; is defined in scala.Predef</p></div></aside></section><section id="generalized_type_constraints_2"><h2>Generalized type constraints</h2><div class="ulist"><ul><li><p><code>&lt;%&lt;</code> - already removed from Scala, meant A is a suptype is is implicitly convertible to B,</p></li><li><p><code>=:!=</code> - types differ - provided by Shapeless</p></li></ul></div></section><section id="type_class_syntax"><h2>Type class syntax</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">trait X[F[_]]
+
+def needX[F[_] : X] = ??? // is equal to
+def needX[F[_]](implicit xf: X[F]) = ???</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>This way we can treat <em>has type class</em> in scope as a type constraint.</p></div></aside></section></section>
 <section><section id="variance"><h2>Variance</h2></section><section id="mutability_and_subtyping"><h2>Mutability and Subtyping</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="java language-java">String[] strings = new String[3];
 strings[0] = "1";
 strings[1] = "2"; // ok so far
@@ -263,7 +307,11 @@ def count(seqs: (Seq[T] forSome { type T })*): Int</code></pre></div></div>
     return Arrays.stream(seqs)
         .mapToInt(seq -&gt; seq.size())
         .sum();
-}</code></pre></div></div></section></section>
+}</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>Explain that existential types are not the same thing as typ constructors!</p></div>
+<div class="paragraph"><p>They just happen to share the same syntax.</p></div>
+<div class="paragraph"><p>Type constructors are about types that are not yet fully constructed and appear as type params.
+Existential types are about fogetting type parameter of existing value and appear in type ascription.</p></div></aside></section></section>
 <section id="structural_types"><h2>Structural types</h2><div class="paragraph"><p>TODO</p></div>
 <div class="paragraph"><p>also reinfed</p></div></section>
 <section id="path_dependent_types"><h2>Path-dependent types</h2><div class="paragraph"><p>TODO</p></div></section>

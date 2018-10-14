@@ -108,6 +108,11 @@ class Admin extends User
 
 (TODO image of type hierarchy from post)
 
+[NOTE.speaker]
+--
+Explain Any, AnyVal, AnyRef, Nothing and Null.
+--
+
 
 === Example
 
@@ -573,7 +578,139 @@ trait NeedTC[F[_]]
 
 == Type constraints
 
-TODO
+[source, scala]
+----
+sealed trait User { val id: Int }
+case class Member(id: Int, name: String) extends User
+case class Admin(id: Int, accss: Set[String]) extends User
+----
+
+Map[id, user] - approach 1
+
+[source, scala]
+----
+def byId(users: Set[User]): Map[Int, User] =
+  users.map { u => u.id -> u }.toMap
+----
+
+Map[id, user] - approach 2
+
+[source, scala]
+----
+def byId[U](users: Set[U])(getId: U => Int): Map[Int, U] =
+  users.map { u => getId(u) -> u }.toMap
+----
+
+
+=== Upper Bound
+
+[source, scala]
+----
+sealed trait User { val id: Int }
+case class Member(id: Int, name: String) extends User
+case class Admin(id: Int, accss: Set[String]) extends User
+----
+
+Map[id, user] - approach 1
+
+[source, scala]
+----
+def byId[U <: User](users: Set[U]): Map[Int, U] =
+  users.map { u => u.id -> u }.toMap
+----
+
+Map[id, user] - approach 2
+
+[source, scala]
+----
+byId(users: Set[Member]) // Map[Int, Member]
+byId(users: Set[Admin]) // Map[Int, Admin]
+----
+
+[NOTE.speaker]
+--
+<: denotes an upper bound in type parameters. It look like this, so that parser would not confuse it with <, but its meaning is similar - a type on the left is smaller (lies lower in hierarchy) than a type on the right
+--
+
+
+=== Lower Bound
+
+[source, scala]
+----
+def recover[E, A, B >: A](
+    either: Either[E, A])(f: E => B): Either[E, B] =
+  either match {
+    case Left(e)  => Right(f(e))
+    case Right(a) => Right(a)
+  }
+----
+
+[source, scala]
+----
+recover[String, Admin, User](err: Either[String, Admin]) {
+    _ =>
+  fallback: Member
+}
+// Either[String, User]
+----
+
+[NOTE.speaker]
+--
+I need to pass types explicitly, otherwise type inference would put Nothing there.
+--
+
+
+=== Generalized type constraints
+
+[source, scala]
+----
+def upcast[A, B](set: Set[A])(
+  implicit ev: A <:< B // A is a subclass of B
+): Set[B] = set.map(ev(_))
+  
+upcast[Member, User](Set(m: Member)) // Set[User]
+----
+
+[source, scala]
+----
+def update[A, B](set: Set[A])(f: A => B)(
+  implicit ev: A =:= B // types are equal
+): Set[B] = set.map(f)
+  
+val members: Set[Member]
+  
+update[Member, Member](members)(identity) // ok
+update[Member, User](members) { member =>
+  member: User
+} // compilation error!
+----
+
+[NOTE.speaker]
+--
+<:< is defined in scala.Predef
+--
+
+
+=== Generalized type constraints
+
+* `<%<` - already removed from Scala, meant A is a suptype is is implicitly convertible to B,
+* `=:!=` - types differ - provided by Shapeless
+
+
+=== Type class syntax
+
+[source, scala]
+----
+trait X[F[_]]
+
+def needX[F[_] : X] = ??? // is equal to
+def needX[F[_]](implicit xf: X[F]) = ???
+----
+
+[NOTE.speaker]
+--
+This way we can treat _has type class_ in scope as a type constraint. 
+--
 
 
 == Variance
@@ -848,6 +985,16 @@ int count(java.util.List<?>... seqs) {
         .sum();
 }
 ----
+
+[NOTE.speaker]
+--
+Explain that existential types are not the same thing as typ constructors!
+
+They just happen to share the same syntax.
+
+Type constructors are about types that are not yet fully constructed and appear as type params.
+Existential types are about fogetting type parameter of existing value and appear in type ascription.
+--
 
 
 == Structural types
