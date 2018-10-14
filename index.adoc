@@ -479,12 +479,63 @@ It is NOT a 0-tuple, which IMHO is a mistake.
 
 == Type Constructors
 
-TODO
+[fragment]#If we have a concrete type - e.g. `String` - we know it is a set of values.#
+
+[fragment]#What about `List`?#
+
+
+=== Types and Sets - reminder
+
+[%step]
+* __type__ - e.g. `Int` - set of values - e.g. 1, 2, 0, -5, ...
+* _function_ - e.g. `Int => Int` - set of pairs `(Int, Int)`, where first value doesn't repeat - e.g. `(1,1,), (2,4), (3,9), ...`
+* we can make a pair of sets (types),
+* function can take set (type) as an argument and return set (type) as a value
+
+[NOTE.speaker]
+--
+Mention that this is true mathematically, wise as PL aren't usually that flexible.
+
+Mention that map is an example of such pair based function, though.
+--
+
+
+=== Types and Sets - reminder
+
+(TODO: add image of List function)
+
+
+=== Types and Sets - reminder
+
+[source, scala]
+----
+// [A] declares type parameter A
+class Wrapper[A](value: A)
+
+val wrapped1 = new Wrapper[Int](1)
+// Wrapper[Int] - Int passed explicitly
+
+val wrapped2 = new Wrapper(2)
+// Wrapper[Int] - Int inferred
+----
+
+Examples: `Option[A]`, `List[A]`, `Either[L, R]`.
+
+[NOTE.speaker]
+--
+Mention, that more details about how parametric types works
+is in the second part of the presentation.
+--
 
 
 == Summary
 
-TODO
+[%step]
+* a type is a set of values
+* a subset, a product set, a set sum and intersection translates to a subtype, a product type, a sum type and an compound/intersection types
+* a class is a type
+* unit exist to avoid special cases
+* on mathematical level a parametric type is a function from type to type
 
 
 // part 2
@@ -496,7 +547,9 @@ TODO
 
 == What is a kind?
 
-A type of type :)
+A type of a type :)
+
+TODO HKT
 
 [NOTE.speaker]
 --
@@ -525,12 +578,276 @@ TODO
 
 == Variance
 
-TODO
+
+=== Mutability and Subtyping
+
+[source, java]
+----
+String[] strings = new String[3];
+strings[0] = "1";
+strings[1] = "2"; // ok so far
+
+Object[] objects = strings; // we can do that as well
+objects[2] = (Integer) 3;
+// java.lang.ArrayStoreException: java.lang.Integer
+----
+
+
+[source, java]
+----
+List<String> strings = new ArrayList<String>();
+strings.add(0, "1");
+strings.add(1, "2");
+
+List<Object> objects = strings; // compilation error
+----
+
+[NOTE.speaker]
+--
+What we expected and what went wrong?
+--
+
+
+=== Invariance
+
+Situation where:
+
+[stem]
+++++
+A <: B \\
+\neg F[A] <: F[B] \land \neg F[B] <: F[A]
+++++
+
+is called __invariance__.
+
+[NOTE.speaker]
+--
+In Scala it is default.
+--
+
+
+=== Immutable containers
+
+[source, scala]
+----
+sealed trait Option[T] {}
+case class Some[T](value: T) extends Option[T]
+case class None[T]() extends Option[T]
+----
+
+[source, scala]
+----
+class A
+class B extends A
+
+val o: Option[B] = Some(new B)
+
+def withOptA(opt: Option[A]) = ???
+
+withOptA(o) // doesn't work
+
+None[A]() != None[B]() // doesn't make sense
+----
+
+=== Covariance
+
+Situation where:
+
+[stem]
+++++
+A <: B \implies F[A] <: F[B]
+++++
+
+is called __covariance__.
+
+[NOTE.speaker]
+--
+In Scala denoted by + sign in front of type parameter.
+--
+
+
+=== Covariance
+
+[source, scala]
+----
+sealed trait Option[+T] {} // + makes the difference
+case class Some[+T](value: T) extends Option[T]
+object None extends Option[Nothing]
+----
+
+[source, scala]
+----
+class A
+class B extends A
+
+val o: Option[B] = Some(new B)
+
+def withOptA(opt: Option[A]) = ???
+
+withOptA(o) // compiles
+
+(None: Option[A]) == (None: Option[B]) // true
+----
+
+[NOTE.speaker]
+--
+Used in containers or any sort of publishers that emit/return a value.
+
+Function interface is covariant when it comes to returned value.
+--
+
+
+=== Subscribers
+
+[source, scala]
+----
+trait Subscriber[A] {
+
+  def apply(value: A): Unit
+}
+----
+
+[source, scala]
+----
+class A
+class B extends A
+
+val subscriberA: Subscriber[A]
+
+List(new B).foreach(subscriberA) // compilation fails!
+----
+
+[NOTE.speaker]
+--
+Invariance fails.
+
+Covariance doesn't help because we don't want to make
+List[B] a List[A], but let Subscriber[A] be used as Subscriber[B].
+
+We don't want to make B more generic, but A more specific.
+--
+
+
+=== Contravariance
+
+Situation where:
+
+[stem]
+++++
+A <: B \implies F[B] <: F[A]
+++++
+
+is called __contravariance__.
+
+[NOTE.speaker]
+--
+In Scala denoted by - sign in front of type parameter.
+--
+
+
+=== Contravariance
+
+[source, scala]
+----
+trait Subscriber[-A] { // - makes the difference
+
+  def apply(value: A): Unit
+}
+----
+
+[source, scala]
+----
+class A
+class B extends A
+
+val subscriberA: Subscriber[A]
+
+List(new B).foreach(subscriberA) // works!
+----
+
+[NOTE.speaker]
+--
+Function interface is contravariant when it comes to the argument.
+--
+
+
+=== Variances
+
+Variances - invariance, covariance, contravariance - is related to type parameter, not the whole type.
+
+[source, scala]
+----
+trait Function1[-A, +B] {
+
+  def apply(arg: A): B
+}
+----
+
+[source, scala]
+----
+val function: Function1[A, B]
+
+def b2b(f: Function[B, B]): Unit
+def a2a(f: Function[A, A]): Unit
+
+b2b(function) // accepting more generic argument is ok
+a2a(function) // returning more specific result is ok
+----
 
 
 == Existential types
 
-TODO
+[source, scala]
+----
+def count[T](seqs: Seq[T]*): Int = seqs.map(_.size).sum
+----
+
+[source, scala]
+----
+count(Seq(1,2,3), Seq("test")) // 4
+----
+
+[NOTE.speaker]
+--
+We never make use of T. We don't care about it at all!
+--
+
+
+=== Existential types
+
+*Universal type*
+
+[stem]
+++++
+\forall_T count: Seq_{Seq_T} \rightarrow int
+++++
+
+*Existential type*
+
+[stem]
+++++
+seq: Seq_? \iff \exists_{T} seq: Seq_T \\
+count: Seq_{Seq_?} \rightarrow int
+++++
+
+=== Existential types
+
+[source, scala]
+----
+def count(seqs: Seq[_]*): Int // syntactic sugar for
+def count(seqs: (Seq[T] forSome { type T })*): Int
+----
+
+Java also has them!
+
+[source, java]
+----
+int count(java.util.List<?>... seqs) {
+    return Arrays.stream(seqs)
+        .mapToInt(seq -> seq.size())
+        .sum();
+}
+----
 
 
 == Structural types
