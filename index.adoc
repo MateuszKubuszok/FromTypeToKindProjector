@@ -36,7 +36,7 @@ Ask audience before moving on.
 
 [fragment]#A collection of values#
 
-[fragment]#(TODO add image of some int and string sets)#
+image::img/types.svg[]
 
 [NOTE.speaker]
 --
@@ -75,7 +75,7 @@ can be judged as some type.
 
 === Subtype & Supertype
 
-(TODO image with member and admin as subtypes of user)
+image::img/subtype.svg[]
 
 
 === Subtype & Supertype
@@ -99,7 +99,7 @@ class Admin extends User
 
 === Subtype & Supertype
 
-(image with admin as a subtype of user)
+image::img/subtype-2.svg[]
 
 
 === Subtype & Supertype
@@ -127,6 +127,7 @@ val x = if (i >= 0) Some(i) // Some[Int]
 === Example Type Hierarchy
 
 image::img/hierarchy.svg[]
+image::img/hierarchy-2.svg[]
 
 [NOTE.speaker]
 --
@@ -516,7 +517,7 @@ Mention that map is an example of such pair based function, though.
 
 === Types and Sets - reminder
 
-(TODO: add image of List function)
+image::img/type-constructor.svg[]
 
 
 === Types and Sets - reminder
