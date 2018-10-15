@@ -113,16 +113,6 @@ class Admin extends User
 == Least Upper Bound and Type Inference
 
 
-=== Some Type Hierarchy
-
-(TODO image of type hierarchy from post)
-
-[NOTE.speaker]
---
-Explain Any, AnyVal, AnyRef, Nothing and Null.
---
-
-
 === Example
 
 [source, scala]
@@ -134,19 +124,29 @@ val x = if (i >= 0) Some(i) // Some[Int]
 ----
 
 
+=== Example Type Hierarchy
+
+image::img/hierarchy.svg[]
+
+[NOTE.speaker]
+--
+Explain Any, AnyVal, AnyRef, Nothing and Null.
+--
+
+
 === Types of `Some(i)`
 
-(TODO add image)
+image::img/hierarchy-some.svg[]
 
 
 === Types of `None`
 
-(TODO add image)
+image::img/hierarchy-none.svg[]
 
 
 === Common part
 
-(TODO add image)
+image::img/hierarchy-option.svg[]
 
 
 === Least Upper Bound
@@ -556,14 +556,10 @@ is in the second part of the presentation.
 
 == `All you need to know about types in Scala`
 
-TODO
-
 
 == What is a kind?
 
 A type of a type :)
-
-TODO HKT
 
 [NOTE.speaker]
 --

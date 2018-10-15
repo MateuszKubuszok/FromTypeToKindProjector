@@ -43,11 +43,11 @@ can be judged as some type.</p></div></aside></section><section id="subtype_supe
 class Member extends User
 class Admin extends User</code></pre></div></div></section><section id="subtype_supertype_4"><h2>Subtype &amp; Supertype</h2><div class="paragraph"><p>(image with admin as a subtype of user)</p></div></section><section id="subtype_supertype_5"><h2>Subtype &amp; Supertype</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">class User
 class Admin extends User</code></pre></div></div></section></section>
-<section><section id="least_upper_bound_and_type_inference"><h2>Least Upper Bound and Type Inference</h2></section><section id="some_type_hierarchy"><h2>Some Type Hierarchy</h2><div class="paragraph"><p>(TODO image of type hierarchy from post)</p></div>
-<aside class="notes"><div class="paragraph"><p>Explain Any, AnyVal, AnyRef, Nothing and Null.</p></div></aside></section><section id="example_2"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val i: Int
+<section><section id="least_upper_bound_and_type_inference"><h2>Least Upper Bound and Type Inference</h2></section><section id="example_2"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val i: Int
 val x = if (i &gt;= 0) Some(i) // Some[Int]
         else None           // None
-// what is the type of x?</code></pre></div></div></section><section id="types_of_code_some_i_code"><h2>Types of <code>Some(i)</code></h2><div class="paragraph"><p>(TODO add image)</p></div></section><section id="types_of_code_none_code"><h2>Types of <code>None</code></h2><div class="paragraph"><p>(TODO add image)</p></div></section><section id="common_part"><h2>Common part</h2><div class="paragraph"><p>(TODO add image)</p></div></section><section id="least_upper_bound"><h2>Least Upper Bound</h2><div class="quoteblock"><blockquote><div class="paragraph"><p><strong>Least Upper Bound</strong> of a - the least type T for which judgement
+// what is the type of x?</code></pre></div></div></section><section id="example_type_hierarchy"><h2>Example Type Hierarchy</h2><div class="imageblock" style=""><img src="img/hierarchy.svg" alt="hierarchy"></div>
+<aside class="notes"><div class="paragraph"><p>Explain Any, AnyVal, AnyRef, Nothing and Null.</p></div></aside></section><section id="types_of_code_some_i_code"><h2>Types of <code>Some(i)</code></h2><div class="imageblock" style=""><img src="img/hierarchy-some.svg" alt="hierarchy some"></div></section><section id="types_of_code_none_code"><h2>Types of <code>None</code></h2><div class="imageblock" style=""><img src="img/hierarchy-none.svg" alt="hierarchy none"></div></section><section id="common_part"><h2>Common part</h2><div class="imageblock" style=""><img src="img/hierarchy-option.svg" alt="hierarchy option"></div></section><section id="least_upper_bound"><h2>Least Upper Bound</h2><div class="quoteblock"><blockquote><div class="paragraph"><p><strong>Least Upper Bound</strong> of a - the least type T for which judgement
 a : T is provable to be true</p></div></blockquote></div>
 <div class="quoteblock"><blockquote><div class="paragraph"><p><strong>Type Inference</strong> - finding the LUB of a value</p></div></blockquote></div></section><section id="example_3"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">val i: Int
 val x = if (i &gt;= 0) Some(i) // Some[Int]
@@ -161,9 +161,8 @@ val wrapped2 = new Wrapper(2)
 <aside class="notes"><div class="paragraph"><p>Mention, that more details about how parametric types works
 is in the second part of the presentation.</p></div></aside></section></section>
 <section id="summary"><h2>Summary</h2><div class="ulist"><ul><li class="fragment"><p>a type is a set of values</p></li><li class="fragment"><p>a subset, a product set, a set sum and intersection translates to a subtype, a product type, a sum type and an compound/intersection types</p></li><li class="fragment"><p>a class is a type</p></li><li class="fragment"><p>unit exist to avoid special cases</p></li><li class="fragment"><p>on mathematical level a parametric type is a function from type to type</p></li></ul></div></section>
-<section id="code_all_you_need_to_know_about_types_in_scala_code"><h2><code>All you need to know about types in Scala</code></h2><div class="paragraph"><p>TODO</p></div></section>
+<section id="code_all_you_need_to_know_about_types_in_scala_code"><h2><code>All you need to know about types in Scala</code></h2></section>
 <section id="what_is_a_kind"><h2>What is a kind?</h2><div class="paragraph"><p>A type of a type :)</p></div>
-<div class="paragraph"><p>TODO HKT</p></div>
 <aside class="notes"><div class="paragraph"><p>Here run snippets in</p></div>
 <div class="paragraph"><p>pushd /tmp &amp;&amp; sbt console || popd</p></div>
 <div class="paragraph"><p>:kind String</p></div>
