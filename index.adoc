@@ -1281,12 +1281,22 @@ Second - Dotty.
 * you (and surely some library authors) will use path-dependent types
 to ensure that some values will be passed only in the right context
 
+
 == More info
 
-* my blog post (add link)
-* ktoso (add link)
-* official documentation (add link)
+[%step]
+* https://kubuszok.com/compiled/kinds-of-types-in-scala/[Kinds of Types in Scala (my blog)]
+* https://ktoso.github.io/scala-types-of-types[Scala's Types of Types (Konrad "ktoso" Malawski)]
+* https://www.scala-lang.org/files/archive/spec/2.12/03-types.html[official documentation]
+
 
 == Questions?
 
+
 == Thanks!
+
+[%step]
+* Mateusz Kubuszok
+* Tweeter: https://twitter.com/MateuszKubuszok[@MateuszKubuszok]
+* GitHub: https://github.com/MateuszKubuszok[@MateuszKubuszok]
+
