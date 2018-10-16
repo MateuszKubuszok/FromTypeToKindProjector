@@ -393,24 +393,35 @@ val x2 = new X {
   type Y = Int
   val y: Y = 1
 }</code></pre></div></div></section><section id="getting_rid_of_path_dependency"><h2>Getting rid of path-dependency</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def takeAnyPlayer(p: Game#Player): Unit</code></pre></div></div></section></section>
-<section><section id="kind_projectors"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">type MonadThrowable[F[_]] = MonadError[F, Throwable]
-def handleError[F[_]: MonadThrowable, A](fa: F[A]): F[A</code></pre></div></div><aside class="notes"><div class="paragraph"><p>To get rid of intermediate type:</p></div>
-<div class="ulist"><ul><li><p>put it into structural type</p></li><li><p>use path-dependent type to extract type with applied one parameter</p></li></ul></div></aside></section><section id="kind_projectors_2"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">type MT { type T[F[_]] = MonadError[F, Throwable] }
-def handleError[F[_]: MT#T, A](fa: F[A]): F[A]</code></pre></div></div>
+<section><section id="kind_projectors"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">type WithFallback[A] = Either[String, A]
+def fallbackOnError[A: WithFallback](
+    value: Either[String, A]
+): Either[String, A] = value match {
+  case Left(_)      =&gt; implicitly[Either[String, A]]
+  case Right(value) =&gt; Right(value)
+}</code></pre></div></div><aside class="notes"><div class="paragraph"><p>To get rid of intermediate type:</p></div>
+<div class="ulist"><ul><li><p>put it into structural type</p></li><li><p>use path-dependent type to extract type with applied one parameter</p></li></ul></div></aside></section><section id="kind_projectors_2"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">type WithFallback = { type T[A] = Either[String, A] }
+def fallbackOnError[A: WithFallback#T](
+    value: Either[String, A]
+): Either[String, A] = ...</code></pre></div></div>
 <aside class="notes"><div class="paragraph"><p>To get rid of intermediate type:</p></div>
-<div class="ulist"><ul><li><p>replace type alias with its definition</p></li></ul></div></aside></section><section id="kind_projectors_3"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def handleError[
-  F[_] : ({ type T[F[_]] = MonadError[F, Throwable] })#T,
-  A
-](fa: F[A]): F[A]</code></pre></div></div>
+<div class="ulist"><ul><li><p>replace type alias with its definition</p></li></ul></div></aside></section><section id="kind_projectors_3"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def fallbackOnError[A: ({ type T[A] = Either[String, A] })#T](
+    value: Either[String, A]
+): Either[String, A]</code></pre></div></div>
 <aside class="notes"><div class="paragraph"><p>You have to use parethesis or it will break.</p></div>
 <div class="paragraph"><p>Mention that lambda sign is often used to denote the kind projector.</p></div>
 <div class="paragraph"><p>Mention it is also known as type-lambda.</p></div>
-<div class="paragraph"><p>Mention, that usually kind projector compiler plugin is used.</p></div></aside></section><section id="kind_projectors_4"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def handleError[F[_] : MonadError[?, Throwable], A](
-  fa: F[A]
-): F[A]</code></pre></div></div>
+<div class="paragraph"><p>Mention, that usually kind projector compiler plugin is used.</p></div></aside></section><section id="kind_projectors_4"><h2>Kind projectors</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def fallbackOnError[A: Either[String, ?]](
+    value: Either[String, A]
+): Either[String, A][A]</code></pre></div></div>
 <div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">[T] =&gt; Either[String, T]</code></pre></div></div>
 <aside class="notes"><div class="paragraph"><p>First - kind projecttor plugin.</p></div>
-<div class="paragraph"><p>Second - Dotty.</p></div></aside></section></section>
+<div class="paragraph"><p>Second - Dotty.</p></div></aside></section><section id="code_ypartial_unification_code"><h2><code>-Ypartial-unification</code></h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">def foo[F[_], A](fa: F[A]) = fa.toString
+
+foo[Function1[Int], Int](x =&gt; x * 2) // error!</code></pre></div></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="scala language-scala">// build.sbt
+scalacOptions += "-Ypartial-unification"</code></pre></div></div>
+<aside class="notes"><div class="paragraph"><p>repl.compiler.settings.YpartialUnification.value = true</p></div></aside></section></section>
 <section id="summary_2"><h2>Summary</h2><div class="ulist"><ul><li class="fragment"><p>we have a quite fine grained control over type parameters and their usage</p></li><li class="fragment"><p>Scala does it best to preserve the type information even if we don&#8217;t need it (now)</p></li><li class="fragment"><p>you (and surely some library authors) will use path-dependent types
 to ensure that some values will be passed only in the right context</p></li></ul></div></section>
 <section id="more_info"><h2>More info</h2><div class="ulist"><ul><li class="fragment"><p><a href="https://kubuszok.com/compiled/kinds-of-types-in-scala/">Kinds of Types in Scala (my blog)</a></p></li><li class="fragment"><p><a href="https://ktoso.github.io/scala-types-of-types">Scala&#8217;s Types of Types (Konrad "ktoso" Malawski)</a></p></li><li class="fragment"><p><a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html">official documentation</a></p></li></ul></div></section>

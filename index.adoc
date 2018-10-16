@@ -1200,8 +1200,13 @@ def takeAnyPlayer(p: Game#Player): Unit
 
 [source, scala]
 ----
-type MonadThrowable[F[_]] = MonadError[F, Throwable]
-def handleError[F[_]: MonadThrowable, A](fa: F[A]): F[A
+type WithFallback[A] = Either[String, A]
+def fallbackOnError[A: WithFallback](
+    value: Either[String, A]
+): Either[String, A] = value match {
+  case Left(_)      => implicitly[Either[String, A]]
+  case Right(value) => Right(value)
+}
 ----
 
 [NOTE.speaker]
@@ -1217,8 +1222,10 @@ To get rid of intermediate type:
 
 [source, scala]
 ----
-type MT { type T[F[_]] = MonadError[F, Throwable] }
-def handleError[F[_]: MT#T, A](fa: F[A]): F[A]
+type WithFallback = { type T[A] = Either[String, A] }
+def fallbackOnError[A: WithFallback#T](
+    value: Either[String, A]
+): Either[String, A] = ...
 ----
 
 [NOTE.speaker]
@@ -1233,10 +1240,9 @@ To get rid of intermediate type:
 
 [source, scala]
 ----
-def handleError[
-  F[_] : ({ type T[F[_]] = MonadError[F, Throwable] })#T,
-  A
-](fa: F[A]): F[A]
+def fallbackOnError[A: ({ type T[A] = Either[String, A] })#T](
+    value: Either[String, A]
+): Either[String, A]
 ----
 
 [NOTE.speaker]
@@ -1255,9 +1261,9 @@ Mention, that usually kind projector compiler plugin is used.
 
 [source, scala]
 ----
-def handleError[F[_] : MonadError[?, Throwable], A](
-  fa: F[A]
-): F[A]
+def fallbackOnError[A: Either[String, ?]](
+    value: Either[String, A]
+): Either[String, A][A]
 ----
 
 [source, scala]
@@ -1270,6 +1276,27 @@ def handleError[F[_] : MonadError[?, Throwable], A](
 First - kind projecttor plugin.
 
 Second - Dotty.
+--
+
+
+=== `-Ypartial-unification`
+
+[source, scala]
+----
+def foo[F[_], A](fa: F[A]) = fa.toString
+
+foo[Function1[Int], Int](x => x * 2) // error!
+----
+
+[source, scala]
+----
+// build.sbt
+scalacOptions += "-Ypartial-unification"
+----
+
+[NOTE.speaker]
+--
+repl.compiler.settings.YpartialUnification.value = true
 --
 
 
